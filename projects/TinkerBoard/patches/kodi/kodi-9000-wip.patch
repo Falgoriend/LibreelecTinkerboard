@@ -1,0 +1,120 @@
+diff --git a/xbmc/system_gl.h b/xbmc/system_gl.h
+index 0eae1af4da..3123ff7b3c 100644
+--- a/xbmc/system_gl.h
++++ b/xbmc/system_gl.h
+@@ -46,6 +46,10 @@
+     #include <OpenGLES/ES2/gl.h>
+     #include <OpenGLES/ES2/glext.h>
+   #else
++    // always define GL_GLEXT_PROTOTYPES before include gl headers
++    #if !defined(GL_GLEXT_PROTOTYPES)
++      #define GL_GLEXT_PROTOTYPES
++    #endif
+     #include <GLES2/gl2.h>
+     #include <GLES2/gl2ext.h>
+   #endif
+diff --git a/xbmc/windowing/gbm/GBMUtils.cpp b/xbmc/windowing/gbm/GBMUtils.cpp
+index ecc4b3ccc0..241baed1b0 100644
+--- a/xbmc/windowing/gbm/GBMUtils.cpp
++++ b/xbmc/windowing/gbm/GBMUtils.cpp
+@@ -2,9 +2,11 @@
+ #include <fcntl.h>
+ #include <stdio.h>
+ #include <stdlib.h>
++#include <stdint.h>
+ #include <string.h>
+ #include <drm/drm_mode.h>
+ #include <EGL/egl.h>
++#include "utils/log.h"
+ 
+ #include "GBMUtils.h"
+ 
+@@ -214,15 +216,22 @@ bool GBMUtils::GetEncoder()
+ 
+ bool GBMUtils::GetPreferredMode()
+ {
+-  int i;
++  int i, area;
+ 
+-  for (i = 0; i < g_drm_connector->count_modes; i++)
++  for (i = 0, area = 0; i < g_drm_connector->count_modes; i++)
+   {
+     drmModeModeInfo *current_mode = &g_drm_connector->modes[i];
+ 
+     if (current_mode->type & DRM_MODE_TYPE_PREFERRED)
+     {
+       g_drm->mode = current_mode;
++	  break;
++    }
++
++    int current_area = current_mode->hdisplay * current_mode->vdisplay;
++    if (current_area > area) {
++      g_drm->mode = current_mode;
++      area = current_area;
+     }
+   }
+ 
+@@ -241,22 +250,31 @@ drm * GBMUtils::InitDrm()
+ 
+   g_drm->fd = open (device, O_RDWR);
+ 
+-  if (g_drm->fd < 0)
++  if (g_drm->fd < 0) {
++	CLog::Log(LOGERROR, "%s: g_drm->fd < 0", __FUNCTION__);
+     return NULL;
++  }
+ 
+-  if (!GetResources())
++  if (!GetResources()) {
++	CLog::Log(LOGERROR, "%s: !GetResources()", __FUNCTION__);
+     return NULL;
++  }
+ 
+-  if (!GetConnector())
++  if (!GetConnector()) {
++	CLog::Log(LOGERROR, "%s: !GetConnector()", __FUNCTION__);
+     return NULL;
++  }
+ 
+-  if (!GetEncoder())
++  if (!GetEncoder()) {
++	CLog::Log(LOGERROR, "%s: !GetEncoder()", __FUNCTION__);
+     return NULL;
+-  else
++  } else
+     g_drm->crtc_id = g_drm_encoder->crtc_id;
+ 
+-  if (!GetPreferredMode())
++  if (!GetPreferredMode()) {
++	CLog::Log(LOGERROR, "%s: !GetPreferredMode()", __FUNCTION__);
+     return NULL;
++  }
+ 
+   for (i = 0; i < g_drm_resources->count_crtcs; i++)
+   {
+diff --git a/xbmc/windowing/gbm/GLContextEGL.h b/xbmc/windowing/gbm/GLContextEGL.h
+index 1c0e964289..fec990bd41 100644
+--- a/xbmc/windowing/gbm/GLContextEGL.h
++++ b/xbmc/windowing/gbm/GLContextEGL.h
+@@ -1,7 +1,8 @@
+ #pragma once
+ 
+-#include "EGL/egl.h"
+-#include "gbm.h"
++#include <EGL/egl.h>
++#include <stdlib.h>
++#include <gbm.h>
+ 
+ class CGLContextEGL
+ {
+diff --git a/xbmc/windowing/gbm/WinSystemGbm.h b/xbmc/windowing/gbm/WinSystemGbm.h
+index 85d5a1dc53..994b7fd666 100644
+--- a/xbmc/windowing/gbm/WinSystemGbm.h
++++ b/xbmc/windowing/gbm/WinSystemGbm.h
+@@ -1,5 +1,6 @@
+ #pragma once
+ 
++#include <stdlib.h>
+ #include <gbm.h>
+ 
+ #include "threads/CriticalSection.h"
