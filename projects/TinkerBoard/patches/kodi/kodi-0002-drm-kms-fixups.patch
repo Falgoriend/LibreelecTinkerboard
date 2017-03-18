@@ -1,0 +1,51 @@
+diff --git a/xbmc/system_gl.h b/xbmc/system_gl.h
+index 0eae1af4da..5ff86b977d 100644
+--- a/xbmc/system_gl.h
++++ b/xbmc/system_gl.h
+@@ -46,6 +46,10 @@
+     #include <OpenGLES/ES2/gl.h>
+     #include <OpenGLES/ES2/glext.h>
+   #else
++    // always define GL_GLEXT_PROTOTYPES before include gles headers
++    #if !defined(GL_GLEXT_PROTOTYPES)
++      #define GL_GLEXT_PROTOTYPES
++    #endif
+     #include <GLES2/gl2.h>
+     #include <GLES2/gl2ext.h>
+   #endif
+diff --git a/xbmc/windowing/gbm/GBMUtils.cpp b/xbmc/windowing/gbm/GBMUtils.cpp
+index 53cf93a7ec..3f8cb0c912 100644
+--- a/xbmc/windowing/gbm/GBMUtils.cpp
++++ b/xbmc/windowing/gbm/GBMUtils.cpp
+@@ -1,5 +1,6 @@
+ #include <errno.h>
+ #include <fcntl.h>
++#include <stdint.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -205,15 +206,22 @@ bool CGBMUtils::GetEncoder()
+ 
+ bool CGBMUtils::GetPreferredMode()
+ {
+-  int i;
++  int i, area;
+ 
+-  for (i = 0; i < g_drm_connector->count_modes; i++)
++  for (i = 0, area = 0; i < g_drm_connector->count_modes; i++)
+   {
+     drmModeModeInfo *current_mode = &g_drm_connector->modes[i];
+ 
+     if (current_mode->type & DRM_MODE_TYPE_PREFERRED)
+     {
+       g_drm->mode = current_mode;
++      break;
++    }
++
++    int current_area = current_mode->hdisplay * current_mode->vdisplay;
++    if (current_area > area) {
++      g_drm->mode = current_mode;
++      area = current_area;
+     }
+   }
+ 
