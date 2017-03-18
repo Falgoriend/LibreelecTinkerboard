@@ -1,0 +1,23 @@
+From e7165685eccd68a77df9c4da907e44008553fd84 Mon Sep 17 00:00:00 2001
+From: Jonas Karlman <jonas@kwiboo.se>
+Date: Sat, 18 Mar 2017 13:08:03 +0100
+Subject: [PATCH 9/9] rk3288-miniarm: raise up vpu clock
+
+---
+ drivers/video/rockchip/vcodec/vcodec_service.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/video/rockchip/vcodec/vcodec_service.c b/drivers/video/rockchip/vcodec/vcodec_service.c
+index 8426bd94294b..a29153b80e02 100644
+--- a/drivers/video/rockchip/vcodec/vcodec_service.c
++++ b/drivers/video/rockchip/vcodec/vcodec_service.c
+@@ -1183,8 +1183,7 @@ static void get_reg_freq(struct vpu_subdev_data *data, struct vpu_reg *reg)
+ 			}
+ 		}
+ 		if (data->hw_id == HEVC_ID) {
+-			if (reg_probe_hevc_y_stride(reg) > 60000)
+-				reg->freq = VPU_FREQ_400M;
++			reg->freq = VPU_FREQ_600M;
+ 		}
+ 		if (reg->type == VPU_PP)
+ 			reg->freq = VPU_FREQ_400M;
