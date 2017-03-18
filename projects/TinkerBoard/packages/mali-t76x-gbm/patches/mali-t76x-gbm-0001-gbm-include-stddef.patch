@@ -1,0 +1,11 @@
+diff -Naur a/include/gbm.h b/include/gbm.h
+--- a/include/gbm.h	2017-02-27 05:22:42.000000000 +0100
++++ b/include/gbm.h	2017-03-18 16:43:15.456990324 +0100
+@@ -35,6 +35,7 @@
+ 
+ #define __GBM__ 1
+ 
++#include <stddef.h>
+ #include <stdint.h>
+ 
+ /**
