@@ -45,12 +45,22 @@ case $PROJECT in
     PKG_DEPENDS_TARGET="${PKG_DEPENDS_TARGET} libamcodec"
     PKG_VERSION="amlvideo"
   ;;
+
+  TinkerBoard)
+    PKG_DEPENDS_TARGET="${PKG_DEPENDS_TARGET} mpp"
+    PKG_VERSION="rockchip"
+  ;;
+
 esac
 
 unpack() {
   case $PROJECT in
     WeTek_Hub|Odroid_C2)
       git clone -b $PKG_VERSION git@github.com:wm4/FFmpeg.git $BUILD/${PKG_NAME}-${PKG_VERSION}
+    ;;
+
+    TinkerBoard)
+      git clone -b $PKG_VERSION git@github.com:LongChair/FFmpeg.git $BUILD/${PKG_NAME}-${PKG_VERSION}
     ;;
 
     *)
@@ -117,6 +127,10 @@ case $PROJECT in
   WeTek_Hub|Odroid_C2)
     FFMPEG_AML="--enable-aml"
   ;;
+
+  TinkerBoard)
+    FFMPEG_RKMPP="--enable-rkmpp"
+  ;;
 esac
 
 pre_configure_target() {
@@ -181,7 +195,8 @@ configure_target() {
               $FFMPEG_FPU \
               --disable-symver \
               $FFMPEG_AML \
-              $FFMPEG_MMAL
+              $FFMPEG_MMAL \
+              $FFMPEG_RKMPP
 }
 
 pre_install()
