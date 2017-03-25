@@ -65,6 +65,10 @@ case $PROJECT in
   WeTek_Hub|Odroid_C2)
     PMP_BUILD_TARGET="AML"
   ;;
+
+  TinkerBoard)
+    PMP_BUILD_TARGET="ROCKCHIP"
+  ;;
 esac
 
 # generate debug symbols for this package

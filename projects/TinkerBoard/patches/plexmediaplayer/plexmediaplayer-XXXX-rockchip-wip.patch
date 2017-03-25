@@ -1,0 +1,68 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index ac82787..2e7d6a2 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -34,6 +34,12 @@ if(BUILD_TARGET STREQUAL "RPI")
+   Message(STATUS "Build for Raspberry PI target")
+ endif(BUILD_TARGET STREQUAL "RPI")
+ 
++
++if(BUILD_TARGET STREQUAL "ROCKCHIP")
++  add_definitions(-DTARGET_ROCKCHIP=1)
++  Message(STATUS "Build for RockChip target")
++endif(BUILD_TARGET STREQUAL "ROCKCHIP")
++
+ option(ENABLE_HELPER "Enable PMP Helper" ON)
+ if (ENABLE_HELPER)
+   add_definitions(-DENABLE_HELPER=1)
+diff --git a/CMakeModules/QtConfiguration.cmake b/CMakeModules/QtConfiguration.cmake
+index 756653d..931661b 100644
+--- a/CMakeModules/QtConfiguration.cmake
++++ b/CMakeModules/QtConfiguration.cmake
+@@ -34,7 +34,7 @@ set(REQUIRED_QT_VERSION "5.7.0")
+ set(QTCONFIGROOT ${QTROOT}/lib/cmake/Qt5)
+ set(components Core Network WebChannel Qml Quick Xml WebEngine Widgets)
+ 
+-if(UNIX AND (NOT APPLE) AND ((NOT BUILD_TARGET STREQUAL "RPI")))
++if(UNIX AND (NOT APPLE) AND ((NOT BUILD_TARGET STREQUAL "RPI") AND (NOT BUILD_TARGET STREQUAL "ROCKCHIP")))
+   add_definitions(-DUSE_X11EXTRAS)
+   set(components ${components} X11Extras)
+ endif()
+diff --git a/src/player/PlayerComponent.cpp b/src/player/PlayerComponent.cpp
+index 3758c9b..ba336c6 100644
+--- a/src/player/PlayerComponent.cpp
++++ b/src/player/PlayerComponent.cpp
+@@ -110,7 +110,7 @@ bool PlayerComponent::componentInitialize()
+   mpv::qt::set_property(m_mpv, "title", QCoreApplication::applicationName());
+ 
+   // Apply some low-memory settings on RPI, which is relatively memory-constrained.
+-#ifdef TARGET_RPI
++#if defined(TARGET_RPI) || defined(TARGET_ROCKCHIP)
+   // The backbuffer makes seeking back faster (without having to do a HTTP-level seek)
+   mpv::qt::set_property(m_mpv, "cache-backbuffer", 10 * 1024); // KB
+   // The demuxer queue is used for the readahead, and also for dealing with badly
+@@ -215,6 +215,11 @@ void PlayerComponent::setWindow(QQuickWindow* window)
+   vo = "rpi";
+ #endif
+ 
++#ifdef TARGET_ROCKCHIP
++  window->setFlags(Qt::FramelessWindowHint);
++  mpv::qt::set_property(m_mpv, "opengl-hwdec-interop", "rkmpp-drm");
++#endif
++
+   m_window = window;
+   if (!window)
+     return;
+diff --git a/src/ui/KonvergoWindow.cpp b/src/ui/KonvergoWindow.cpp
+index 77b0bde..4e40112 100644
+--- a/src/ui/KonvergoWindow.cpp
++++ b/src/ui/KonvergoWindow.cpp
+@@ -48,7 +48,7 @@ KonvergoWindow::KonvergoWindow(QWindow* parent) :
+   InputComponent::Get().registerHostCommand("minimize", this, "minimizeWindow");
+   InputComponent::Get().registerHostCommand("fullscreenCurrentMode", this, "toggleFullscreenNoSwitch");
+ 
+-#ifdef TARGET_RPI
++#if (defined(TARGET_RPI) || defined(TARGET_ROCKCHIP))
+   // On RPI, we use dispmanx layering - the video is on a layer below Konvergo,
+   // and during playback the Konvergo window is partially transparent. The OSD
+   // will be visible on top of the video as part of the Konvergo window.
