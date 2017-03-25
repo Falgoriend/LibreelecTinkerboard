@@ -41,7 +41,7 @@ if [ "$DISPLAYSERVER" = "x11" ]; then
   QT_QPA_OPTS="-qpa xcb -opengl desktop -no-kms -no-directfb -qt-xcb"
 elif [ ! "$OPENGLES" = "no" ]; then
   PKG_QT_QPA="$OPENGLES libevdev libwebp"
-  QT_QPA_OPTS="-qpa eglfs -opengl es2 -no-kms -no-directfb -no-xcb"
+  QT_QPA_OPTS="-qpa eglfs -opengl es2 -no-directfb -no-xcb"
 fi
 
 # Combine packages
